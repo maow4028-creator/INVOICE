@@ -1,0 +1,28 @@
+{
+  "name": "invoicify-pro",
+  "version": "1.0.0",
+  "description": "Premium Business Invoice Generator & Financial Workspace",
+  "scripts": {
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "db:push": "cd server && npm run prisma:push",
+    "db:seed": "cd server && npm run prisma:seed",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview",
+    "host": "cd client && npm run preview -- --host --port 4173",
+    "start": "cd server && npm start"
+  },
+  "keywords": [
+    "invoice",
+    "invoice-generator",
+    "pdf-generation",
+    "saas",
+    "billing",
+    "firebase",
+    "react",
+    "typescript",
+    "tailwind"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}

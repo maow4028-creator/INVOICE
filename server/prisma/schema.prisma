@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  password        String
+  name            String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  businessProfile BusinessProfile?
+  clients         Client[]
+  invoices        Invoice[]
+  products        Product[]
+  payments        Payment[]
+  settings        UserSettings?
+}
+
+model BusinessProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String   @default("")
+  ownerName          String   @default("")
+  email              String   @default("")
+  phone              String   @default("")
+  address            String   @default("")
+  city               String   @default("")
+  state              String   @default("")
+  postalCode         String   @default("")
+  country            String   @default("")
+  website            String   @default("")
+  gstin              String   @default("")
+  panNumber          String   @default("")
+  registrationNumber String   @default("")
+  bankName           String   @default("")
+  accountNumber      String   @default("")
+  ifscCode           String   @default("")
+  upiId              String   @default("")
+  logoUrl            String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Client {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName    String    @default("")
+  name            String
+  email           String    @default("")
+  phone           String    @default("")
+  billingAddress  String    @default("")
+  shippingAddress String    @default("")
+  gstin           String    @default("")
+  pan             String    @default("")
+  notes           String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  invoices        Invoice[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String   @default("")
+  unitPrice   Float    @default(0)
+  defaultTax  Float    @default(0)
+  type        String   @default("Service") // "Product" | "Service"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id                  String        @id @default(uuid())
+  invoiceNumber       String
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId            String?
+  client              Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  
+  // Snapshots for independence
+  clientName          String        @default("")
+  clientEmail         String        @default("")
+  clientPhone         String        @default("")
+  clientAddress       String        @default("")
+  clientGstin         String        @default("")
+  clientPan           String        @default("")
+  
+  businessName        String        @default("")
+  businessLogo        String        @default("")
+  businessEmail       String        @default("")
+  businessPhone       String        @default("")
+  businessAddress     String        @default("")
+  businessGstin       String        @default("")
+  businessPan         String        @default("")
+  bankDetails         String        @default("")
+  upiId               String        @default("")
+
+  invoiceDate         DateTime      @default(now())
+  dueDate             DateTime
+  paymentTerms        String        @default("Due on Receipt")
+  currency            String        @default("INR")
+  currencySymbol      String        @default("₹")
+  status              String        @default("UNPAID") // DRAFT, SENT, PAID, PARTIALLY_PAID, UNPAID, OVERDUE, CANCELLED
+  
+  template            String        @default("modern-blue") // modern-blue, minimal-white, corporate-pro, elegant-business
+  accentColor         String        @default("#123B5D")
+  fontFamily          String        @default("Inter")
+
+  subtotal            Float         @default(0)
+  discountType        String        @default("percentage") // percentage | fixed
+  discountValue       Float         @default(0)
+  discountAmount      Float         @default(0)
+  taxTotal            Float         @default(0)
+  shipping            Float         @default(0)
+  additionalCharges   Float         @default(0)
+  grandTotal          Float         @default(0)
+  amountPaid          Float         @default(0)
+  balanceDue          Float         @default(0)
+
+  notes               String        @default("")
+  terms               String        @default("")
+  paymentInstructions String        @default("")
+  thankYouMessage     String        @default("Thank you for your business!")
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  items               InvoiceItem[]
+  payments            Payment[]
+}
+
+model InvoiceItem {
+  id            String   @id @default(uuid())
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  name          String
+  description   String   @default("")
+  quantity      Float    @default(1)
+  unitPrice     Float    @default(0)
+  taxPercentage Float    @default(0)
+  discount      Float    @default(0)
+  total         Float    @default(0)
+  sortOrder     Int      @default(0)
+}
+
+model Payment {
+  id             String   @id @default(uuid())
+  invoiceId      String
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount         Float
+  paymentDate    DateTime @default(now())
+  paymentMethod  String   @default("Bank Transfer") // Bank Transfer, UPI, Credit Card, Cash, Cheque, PayPal, Other
+  transactionRef String   @default("")
+  notes          String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+model UserSettings {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultCurrency      String   @default("INR")
+  defaultCurrencySymbol String  @default("₹")
+  defaultTax           Float    @default(18.0)
+  defaultPaymentTerms  String   @default("Net 30")
+  invoicePrefix        String   @default("INV-2026-")
+  nextInvoiceNumber    Int      @default(1001)
+  defaultTemplate      String   @default("modern-blue")
+  defaultAccentColor   String   @default("#123B5D")
+  defaultFontFamily    String   @default("Inter")
+  defaultNotes         String   @default("Thank you for your business! Please remit payment within the agreed terms.")
+  defaultTerms         String   @default("1. Payment is required as per agreed terms.\n2. Invoices past due date may incur standard late interest.\n3. Goods or services once delivered will be billed as agreed.")
+  dateFormat           String   @default("YYYY-MM-DD")
+  darkMode             Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
